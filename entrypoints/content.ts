@@ -4,7 +4,6 @@ let enabled = false
 export default defineContentScript({
 	matches: ['*://*/*'],
 	main() {
-		console.log('Hello content.')
 		document.addEventListener('keydown', (event) => {
 			console.log(event.repeat)
 			if (event.altKey) {
@@ -49,14 +48,18 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 }
 
 const getDivs = () => {
-	const targets = ['#text', 'A', 'BR']
-	const list = [...document.querySelectorAll('div')].filter(
+	const targets = ['#text', 'A', 'BR', 'STRONG']
+	const list = (
+		[...document.querySelectorAll('div,li')] as (
+			| HTMLDivElement
+			| HTMLLIElement
+		)[]
+	).filter(
 		(d) =>
-			d.textContent &&
-			d.textContent.length > 15 &&
+			d.innerText &&
+			d.innerText.length > 15 &&
 			![...d.childNodes].find((n) => !targets.includes(n.nodeName))
 	)
-	console.log('div list', list)
 	list.forEach((d) => {
 		if (document.documentElement.lang.includes('en')) {
 			d.appendChild(wrapTextNodes(d))
@@ -75,14 +78,18 @@ const translateText = async (
 function init(): void {
 	getDivs()
 	// Get all <p> tags on the page
-	const paragraphs = document.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4')
+	const paragraphs = Array.from(
+		document.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4')
+	)
 
 	// Iterate through each <p> tag
-	paragraphs.forEach((paragraph) => {
-		if (document.documentElement.lang.includes('en')) {
-			paragraph.appendChild(wrapTextNodes(paragraph))
-		}
-	})
+	paragraphs
+		.filter((p) => p.innerText.length > 5)
+		.forEach((paragraph) => {
+			if (document.documentElement.lang.includes('en')) {
+				paragraph.appendChild(wrapTextNodes(paragraph))
+			}
+		})
 
 	// Add a style element to the document head for the hover effect
 	const style = document.createElement('style')
