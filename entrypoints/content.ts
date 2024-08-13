@@ -5,7 +5,6 @@ export default defineContentScript({
 	matches: ['*://*/*'],
 	main() {
 		document.addEventListener('keydown', (event) => {
-			console.log(event.repeat)
 			if (event.altKey) {
 				if (enabled) {
 					// removeListener()
