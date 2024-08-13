@@ -8,6 +8,7 @@ export default defineContentScript({
 			console.log(event.repeat)
 			if (event.altKey) {
 				if (enabled) {
+					// removeListener()
 					location.reload()
 				} else {
 					init()
@@ -97,7 +98,6 @@ function init(): void {
     .sentence {
         position: relative;
         transition: border-bottom-color 0.3s ease;
-        cursor: pointer;
     }
     .sentence:hover {
         border-bottom: 2px solid #32CD32; /* Beautiful green */
@@ -122,42 +122,66 @@ function init(): void {
         display: block;
     }
 `
+	style.id = 'SENTENCE_STYLE_SHEET'
 	document.head.appendChild(style)
 
-	// Apply the hover effect and translation using JavaScript
+	function applyListener() {
+		// Apply the hover effect and translation using JavaScript
+		document.querySelectorAll<HTMLElement>('.sentence').forEach((span) => {
+			const greenColor = '#32CD32' // Beautiful green color
+
+			// Create a popover element
+			const popover = document.createElement('div')
+			popover.className = 't-popover'
+			span.appendChild(popover)
+
+			span.addEventListener('mouseover', function (this: HTMLElement) {
+				this.style.borderBottomColor = greenColor
+				// Check if the popover already contains translated text
+				if (popover.innerText.trim() !== '') {
+					return // If it does, do nothing
+				}
+
+				// Get the original text
+				const originalText = this.innerText
+				console.log('span', this.innerText)
+				translateText(originalText, 'zh')
+					.then((data) => {
+						console.log('result ', data)
+						// Show the translated text in the popover
+						popover.innerHTML = data
+					})
+					.catch((error) => {
+						popover.innerText = 'Translation failed'
+						console.error('Error:', error)
+					})
+			})
+
+			span.addEventListener('mouseout', function (this: HTMLElement) {
+				this.style.borderBottomColor = 'transparent'
+			})
+		})
+	}
+	applyListener()
+}
+
+function removeListener() {
+	const styleElement = document.getElementById('SENTENCE_STYLE_SHEET')
+	if (styleElement) {
+		styleElement.remove()
+	}
 	document.querySelectorAll<HTMLElement>('.sentence').forEach((span) => {
-		const greenColor = '#32CD32' // Beautiful green color
-
-		// Create a popover element
-		const popover = document.createElement('div')
-		popover.className = 't-popover'
-		span.appendChild(popover)
-
-		span.addEventListener('mouseover', function (this: HTMLElement) {
-			this.style.borderBottomColor = greenColor
-			// Check if the popover already contains translated text
-			if (popover.innerText.trim() !== '') {
-				return // If it does, do nothing
-			}
-
-			// Get the original text
-			const originalText = this.innerText
-			console.log('span', this.innerText)
-			translateText(originalText, 'zh')
-				.then((data) => {
-					console.log('result ', data)
-					// Show the translated text in the popover
-					popover.innerHTML = data
-				})
-				.catch((error) => {
-					popover.innerText = 'Translation failed'
-					console.error('Error:', error)
-				})
-		})
-
-		span.addEventListener('mouseout', function (this: HTMLElement) {
-			this.style.borderBottomColor = 'transparent'
-		})
+		// // Remove all registered mouseover events
+		const clonedSpan = span.cloneNode(true) as HTMLElement
+		span.parentNode?.replaceChild(clonedSpan, span)
+		span = clonedSpan
+		// Remove the popover element
+		const popover = span.querySelector('.t-popover')
+		if (popover) {
+			span.removeChild(popover)
+		}
+		// Reset the style
+		// span.style.borderBottomColor = ''
 	})
 }
 
