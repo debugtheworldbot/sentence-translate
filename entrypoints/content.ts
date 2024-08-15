@@ -82,17 +82,17 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 	return fragment
 }
 
-const getDivs = () => {
-	const targets = ['#text', 'A', 'BR', 'STRONG']
+const mapElements = () => {
+	const targets = ['#text', 'A', 'BR', 'STRONG', 'EM']
 	const list = (
-		[...document.querySelectorAll('div,li')] as (
+		[...document.querySelectorAll('div,li,span,p')] as (
 			| HTMLDivElement
 			| HTMLLIElement
 		)[]
 	).filter(
 		(d) =>
 			d.innerText &&
-			d.innerText.length > 15 &&
+			d.innerText.length > 10 &&
 			![...d.childNodes].find((n) => !targets.includes(n.nodeName))
 	)
 	list.forEach((d) => {
@@ -111,21 +111,7 @@ const translateText = async (
 }
 
 function init(): void {
-	getDivs()
-	// Get all <p> tags on the page
-	const paragraphs = Array.from(
-		document.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4')
-	)
-
-	// Iterate through each <p> tag
-	paragraphs
-		.filter((p) => p.innerText.length > 5)
-		.forEach((paragraph) => {
-			if (document.documentElement.lang.includes('en')) {
-				paragraph.appendChild(wrapTextNodes(paragraph))
-			}
-		})
-
+	mapElements()
 	// Add a style element to the document head for the hover effect
 	const style = document.createElement('style')
 	style.innerHTML = `
