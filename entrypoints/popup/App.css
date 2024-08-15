@@ -24,6 +24,21 @@
 	font-weight: bold;
 }
 
+.switch {
+	font-size: 1rem;
+}
+
+.switch-button {
+	border: none;
+	outline: none;
+	border-radius: 0.5rem;
+	padding: 0.5rem 1rem;
+	background-color: #54bc4a;
+	width: 4rem;
+	margin-left: 10px;
+	color: white;
+}
+
 .read-the-docs {
 	color: #888;
 }

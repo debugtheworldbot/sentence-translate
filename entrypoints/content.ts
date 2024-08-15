@@ -7,6 +7,13 @@ const status = {
 export default defineContentScript({
 	matches: ['*://*/*'],
 	main() {
+		storage.getItem<boolean>('local:autoEnabled').then((data) => {
+			status.enabled = data === null ? true : data
+			if (status.enabled) {
+				init()
+				listenForRouteChange()
+			}
+		})
 		document.addEventListener('keydown', (event) => {
 			// Detect keybinding for Option+S (Alt+S)
 			if (event.altKey && event.code === 'KeyS') {
