@@ -83,9 +83,9 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 }
 
 const mapElements = () => {
-	const targets = ['#text', 'A', 'BR', 'STRONG', 'EM']
+	const targets = ['#text', 'A', 'BR', 'STRONG', 'EM', 'CODE']
 	const list = (
-		[...document.querySelectorAll('div,li,span,p')] as (
+		[...document.querySelectorAll('div,li,span,p,h1,h2,h3,h4')] as (
 			| HTMLDivElement
 			| HTMLLIElement
 		)[]
@@ -150,20 +150,19 @@ function init(): void {
 		document.querySelectorAll<HTMLElement>('.sentence').forEach((span) => {
 			const greenColor = '#32CD32' // Beautiful green color
 
-			// Create a popover element
-			const popover = document.createElement('div')
-			popover.className = 't-popover'
-			span.appendChild(popover)
-
 			span.addEventListener('mouseover', function (this: HTMLElement) {
 				this.style.borderBottomColor = greenColor
 				// Check if the popover already contains translated text
-				if (popover.innerText.trim() !== '') {
+				if (span.querySelector('.t-popover')) {
 					return // If it does, do nothing
 				}
 
 				// Get the original text
-				const originalText = this.innerText
+				const originalText = this.innerHTML
+				// Create a popover element
+				const popover = document.createElement('div')
+				popover.className = 't-popover'
+				span.appendChild(popover)
 				translateText(originalText, 'zh')
 					.then((data) => {
 						// Show the translated text in the popover
