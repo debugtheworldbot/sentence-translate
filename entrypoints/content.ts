@@ -5,11 +5,15 @@ export default defineContentScript({
 	matches: ['*://*/*'],
 	main() {
 		document.addEventListener('keydown', (event) => {
-			if (event.altKey) {
+			// Detect keybinding for Option+S (Alt+S)
+			if (event.altKey && event.code === 'KeyS') {
 				if (enabled) {
-					// removeListener()
-					location.reload()
+					toast('Sentence translation disabled', '#FF0000')
+					setTimeout(() => {
+						location.reload()
+					}, 1000)
 				} else {
+					toast('Sentence translation enabled')
 					init()
 					listenForRouteChange()
 				}
@@ -19,6 +23,37 @@ export default defineContentScript({
 		})
 	},
 })
+
+function toast(text: string, color?: string) {
+	const toast = document.createElement('div')
+	const bg = color || '#4CAF50'
+	toast.textContent = text
+	toast.style.cssText = `
+						position: fixed;
+						bottom: 20px;
+						right: -300px;
+						background-color: ${bg};
+						color: white;
+						padding: 16px;
+						border-radius: 4px;
+						z-index: 1000;
+						transition: right 0.5s;
+					`
+	// Trigger the slide-in effect
+	setTimeout(() => {
+		toast.style.right = '20px'
+	}, 100)
+
+	// Set up the slide-out effect
+	setTimeout(() => {
+		toast.style.right = '-300px'
+	}, 2500)
+	document.body.appendChild(toast)
+	setTimeout(() => {
+		document.body.removeChild(toast)
+	}, 3000)
+}
+
 function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 	// Create a document fragment to hold the new structure
 	const fragment = document.createDocumentFragment()
@@ -143,10 +178,8 @@ function init(): void {
 
 				// Get the original text
 				const originalText = this.innerText
-				console.log('span', this.innerText)
 				translateText(originalText, 'zh')
 					.then((data) => {
-						console.log('result ', data)
 						// Show the translated text in the popover
 						popover.innerHTML = data
 					})
