@@ -11,7 +11,7 @@ function App() {
 					<img src={wxtLogo} className='logo' alt='WXT logo' />
 				</a>
 			</div>
-			<div className='card'>Press Alt/Option + s to enable it!</div>
+			<div className='card'>Press Alt/Option + s to toggle it!</div>
 		</>
 	)
 }

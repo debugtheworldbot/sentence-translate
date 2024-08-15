@@ -1,24 +1,29 @@
 import { getHTTPService } from './httpService'
 
-let enabled = false
+const status = {
+	enabled: false,
+	initialized: false,
+}
 export default defineContentScript({
 	matches: ['*://*/*'],
 	main() {
 		document.addEventListener('keydown', (event) => {
 			// Detect keybinding for Option+S (Alt+S)
 			if (event.altKey && event.code === 'KeyS') {
-				if (enabled) {
+				if (status.enabled) {
 					toast('Sentence translation disabled', '#FF0000')
-					setTimeout(() => {
-						location.reload()
-					}, 1000)
+					removeListener()
+
+					// setTimeout(() => {
+					// 	location.reload()
+					// }, 1000)
 				} else {
 					toast('Sentence translation enabled')
 					init()
 					listenForRouteChange()
 				}
 
-				enabled = !enabled
+				status.enabled = !status.enabled
 			}
 		})
 	},
@@ -61,8 +66,8 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 
 	function splitSentences(text: string): RegExpMatchArray | null {
 		if (!text) return null
-		// const segmenter = new Intl.Segmenter("en", { granularity: "sentence" });
-		// return Array.from(segmenter.segment(text), (segment) => segment.segment);
+		// const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' })
+		// return Array.from(segmenter.segment(text), (segment) => segment.segment)
 		const regex =
 			/(?=[^])(?:\P{Sentence_Terminal}|\p{Sentence_Terminal}(?!['"`\p{Close_Punctuation}\p{Final_Punctuation}\s]))*(?:\p{Sentence_Terminal}+['"`\p{Close_Punctuation}\p{Final_Punctuation}]*|$)/guy
 		return text.match(regex)
@@ -83,6 +88,8 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 }
 
 const mapElements = () => {
+	if (status.initialized) return
+	status.initialized = true
 	const targets = ['#text', 'A', 'BR', 'STRONG', 'EM', 'CODE']
 	const list = (
 		[...document.querySelectorAll('div,li,span,p,h1,h2,h3,h4')] as (
@@ -188,15 +195,15 @@ function removeListener() {
 		styleElement.remove()
 	}
 	document.querySelectorAll<HTMLElement>('.sentence').forEach((span) => {
-		// // Remove all registered mouseover events
-		const clonedSpan = span.cloneNode(true) as HTMLElement
-		span.parentNode?.replaceChild(clonedSpan, span)
-		span = clonedSpan
 		// Remove the popover element
 		const popover = span.querySelector('.t-popover')
 		if (popover) {
 			span.removeChild(popover)
 		}
+		// // Remove all registered mouseover events
+		const clonedSpan = span.cloneNode(true) as HTMLElement
+		span.parentNode?.replaceChild(clonedSpan, span)
+		span = clonedSpan
 		// Reset the style
 		// span.style.borderBottomColor = ''
 	})
