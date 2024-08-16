@@ -2,7 +2,7 @@
 	"name": "sentence-hover-translator",
 	"description": "When you hover a Sentence, I will auto translate it fot you!",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"type": "module",
 	"scripts": {
 		"dev": "wxt",
