@@ -2,8 +2,11 @@ import { getHTTPService } from './httpService'
 
 const status = {
 	enabled: false,
-	initialized: false,
 }
+
+const popoverClass = 'extension_translate_popover'
+
+const translatedMap: Record<string, string> = {}
 export default defineContentScript({
 	matches: ['*://*/*'],
 	main() {
@@ -89,17 +92,17 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 		const span = document.createElement('span')
 		span.className = 'sentence'
 		span.innerHTML = sentence
+		span.id = Math.random().toString(36).substring(2, 15)
 		parent.innerHTML = ''
 		fragment.appendChild(span)
-		fragment.appendChild(document.createTextNode(' ')) // Add space between sentences
 	})
 
 	return fragment
 }
 
 const mapElements = () => {
-	if (status.initialized) return
-	status.initialized = true
+	// if (status.initialized) return
+	// status.initialized = true
 	const targets = [
 		'#text',
 		'A',
@@ -112,7 +115,7 @@ const mapElements = () => {
 	]
 	const list = (
 		[
-			...document.querySelectorAll('div,li,p,h1,h2,h3,h4,blockquote'),
+			...document.querySelectorAll('div,li,p,h1,h2,h3,h4,blockquote,span'),
 		] as HTMLDivElement[]
 	).filter(
 		(d) =>
@@ -149,57 +152,63 @@ function init(): void {
     .sentence:hover {
         border-bottom: 2px solid #32CD32; /* Beautiful green */
     }
-    .t-popover {
+    .${popoverClass} {
         position: fixed;
         color: black;
+        min-width: 200px;
         background-color: #fff;
         padding: 5px 10px;
         border-radius: 6px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         z-index: 1000;
         transform: translateY(10px);
-        display: none;
-    }
-    .sentence:hover .t-popover {
-        display: block;
+        opacity: 0;
+        transition: all 0.2s !important;
     }
 `
 	style.id = 'SENTENCE_STYLE_SHEET'
 	document.head.appendChild(style)
 
+	// Create a popover element if not exists
+	const popoverElement = document.getElementsByClassName(popoverClass)
+	let popover: HTMLElement
+	if (!popoverElement.length) {
+		popover = document.createElement('span')
+		popover.className = popoverClass
+		popover.id = `${popoverClass}-init`
+		document.body.appendChild(popover)
+	} else {
+		popover = popoverElement[0] as HTMLElement
+	}
 	function applyListener() {
 		// Apply the hover effect and translation using JavaScript
 		document.querySelectorAll<HTMLElement>('.sentence').forEach((span) => {
 			const greenColor = '#32CD32' // Beautiful green color
 
+			function listener() {
+				updatePopoverPosition(span, popover)
+			}
 			span.addEventListener('mouseover', function (this: HTMLElement) {
 				this.style.borderBottomColor = greenColor
-				// Check if the popover already contains translated text
-				if (span.querySelector('.t-popover')) {
-					return // If it does, do nothing
-				}
-
-				// Get the original text
-				const originalText = this.innerHTML
-				// Create a popover element
-				const popover = document.createElement('span')
-				popover.className = 't-popover'
-				span.appendChild(popover)
 
 				updatePopoverPosition(span, popover)
 
 				// update position when window is resized or scrolled
-				window.addEventListener('resize', () => {
-					updatePopoverPosition(span, popover)
-				})
-				window.addEventListener('scroll', () => {
-					updatePopoverPosition(span, popover)
-				})
+				window.addEventListener('resize', listener)
+				window.addEventListener('scroll', listener)
+				// Check if the popover already contains translated text
+				if (translatedMap[span.id]) {
+					popover.innerHTML = translatedMap[span.id]
+					return
+				}
 
+				// Get the original text
+				const originalText = this.innerHTML
 				translateText(originalText, 'zh')
 					.then((data) => {
 						// Show the translated text in the popover
 						popover.innerHTML = data
+						translatedMap[span.id] = data
 					})
 					.catch((error) => {
 						popover.innerText = 'Translation failed'
@@ -209,6 +218,10 @@ function init(): void {
 
 			span.addEventListener('mouseout', function (this: HTMLElement) {
 				this.style.borderBottomColor = 'transparent'
+				popover.style.opacity = '0'
+				// remove scroll and resize listeners
+				window.removeEventListener('resize', listener)
+				window.removeEventListener('scroll', listener)
 			})
 		})
 	}
@@ -221,6 +234,8 @@ function updatePopoverPosition(span: HTMLElement, popover: HTMLElement) {
 	popover.style.top = `${spanRect.bottom}px`
 	popover.style.left = `${spanRect.left}px`
 	popover.style.maxWidth = `${spanRect.width}px`
+	popover.style.opacity = '1'
+	popover.id = span.id
 }
 
 function removeListener() {
@@ -228,18 +243,13 @@ function removeListener() {
 	if (styleElement) {
 		styleElement.remove()
 	}
+	const popovers = document.getElementsByClassName(popoverClass)
+	while (popovers.length > 0) {
+		const popover = popovers[0]
+		popover.parentNode?.removeChild(popover)
+	}
 	document.querySelectorAll<HTMLElement>('.sentence').forEach((span) => {
-		// Remove the popover element
-		const popover = span.querySelector('.t-popover')
-		if (popover) {
-			span.removeChild(popover)
-		}
-		// // Remove all registered mouseover events
-		const clonedSpan = span.cloneNode(true) as HTMLElement
-		span.parentNode?.replaceChild(clonedSpan, span)
-		span = clonedSpan
-		// Reset the style
-		// span.style.borderBottomColor = ''
+		span.replaceWith(...span.childNodes)
 	})
 }
 
