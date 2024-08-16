@@ -6,7 +6,7 @@ function App() {
 
 	useEffect(() => {
 		storage.getItem<boolean>('local:autoEnabled').then((data) => {
-			setEnabled(data || true)
+			setEnabled(data === null ? true : data)
 		})
 	}, [])
 
@@ -21,7 +21,7 @@ function App() {
 					<img src={wxtLogo} className='logo' alt='WXT logo' />
 				</a>
 			</div>
-			<div className='card'>Press Alt/Option + s to toggle it!</div>
+			<div className='card'>Press Alt/Option + z to toggle it!</div>
 			<div className='switch'>
 				auto enable sentence translate on every page
 				<button

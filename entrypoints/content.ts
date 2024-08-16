@@ -10,13 +10,16 @@ export default defineContentScript({
 		storage.getItem<boolean>('local:autoEnabled').then((data) => {
 			status.enabled = data === null ? true : data
 			if (status.enabled) {
-				init()
-				listenForRouteChange()
+				setTimeout(() => {
+					console.log('init')
+					init()
+					listenForRouteChange()
+				}, 1500)
 			}
 		})
 		document.addEventListener('keydown', (event) => {
 			// Detect keybinding for Option+S (Alt+S)
-			if (event.altKey && event.code === 'KeyS') {
+			if (event.altKey && event.code === 'KeyZ') {
 				if (status.enabled) {
 					toast('Sentence translation disabled', '#FF0000')
 					removeListener()
@@ -97,9 +100,18 @@ function wrapTextNodes(parent: HTMLElement): DocumentFragment {
 const mapElements = () => {
 	if (status.initialized) return
 	status.initialized = true
-	const targets = ['#text', 'A', 'BR', 'STRONG', 'EM', 'CODE']
+	const targets = [
+		'#text',
+		'A',
+		'BR',
+		'STRONG',
+		'EM',
+		'CODE',
+		'IMG',
+		'BLOCKQUOTE',
+	]
 	const list = (
-		[...document.querySelectorAll('div,li,span,p,h1,h2,h3,h4')] as (
+		[...document.querySelectorAll('div,li,span,p,h1,h2,h3,h4,blockquote')] as (
 			| HTMLDivElement
 			| HTMLLIElement
 		)[]
@@ -137,16 +149,11 @@ function init(): void {
         border-bottom: 2px solid #32CD32; /* Beautiful green */
     }
     .t-popover {
-        position: absolute;
+        position: fixed;
         color: black;
-        top: 100%;
-        width: 100%;
-        left: 0;
-        min-width: 300px;
         background-color: #fff;
         padding: 5px 10px;
-        border: 1px solid #ccc;
-        border-radius: 3px;
+        border-radius: 6px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         z-index: 1000;
         transform: translateY(10px);
@@ -174,9 +181,20 @@ function init(): void {
 				// Get the original text
 				const originalText = this.innerHTML
 				// Create a popover element
-				const popover = document.createElement('div')
+				const popover = document.createElement('span')
 				popover.className = 't-popover'
 				span.appendChild(popover)
+
+				updatePopoverPosition(span, popover)
+
+				// update position when window is resized or scrolled
+				window.addEventListener('resize', () => {
+					updatePopoverPosition(span, popover)
+				})
+				window.addEventListener('scroll', () => {
+					updatePopoverPosition(span, popover)
+				})
+
 				translateText(originalText, 'zh')
 					.then((data) => {
 						// Show the translated text in the popover
@@ -194,6 +212,14 @@ function init(): void {
 		})
 	}
 	applyListener()
+}
+
+function updatePopoverPosition(span: HTMLElement, popover: HTMLElement) {
+	const spanRect = span.getBoundingClientRect()
+	// position popover to the bottom of the span
+	popover.style.top = `${spanRect.bottom}px`
+	popover.style.left = `${spanRect.left}px`
+	popover.style.maxWidth = `${spanRect.width}px`
 }
 
 function removeListener() {
