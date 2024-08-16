@@ -111,15 +111,16 @@ const mapElements = () => {
 		'BLOCKQUOTE',
 	]
 	const list = (
-		[...document.querySelectorAll('div,li,span,p,h1,h2,h3,h4,blockquote')] as (
-			| HTMLDivElement
-			| HTMLLIElement
-		)[]
+		[
+			...document.querySelectorAll('div,li,p,h1,h2,h3,h4,blockquote'),
+		] as HTMLDivElement[]
 	).filter(
 		(d) =>
 			d.innerText &&
 			d.innerText.length > 10 &&
-			![...d.childNodes].find((n) => !targets.includes(n.nodeName))
+			// if the node is a p, it should be ignored
+			(d.nodeName === 'P' ||
+				![...d.childNodes].find((n) => !targets.includes(n.nodeName)))
 	)
 	list.forEach((d) => {
 		if (document.documentElement.lang.includes('en')) {
