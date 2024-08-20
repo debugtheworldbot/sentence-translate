@@ -42,3 +42,22 @@
 .read-the-docs {
 	color: #888;
 }
+
+.language-selector {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	gap: 10px;
+}
+
+.language-selector select {
+	background-color: #f0f0f0;
+	border: none;
+	outline: none;
+	border-radius: 6px;
+	padding: 8px;
+	text-align: center;
+	font-weight: bold;
+	width: 100px;
+}

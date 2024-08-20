@@ -2,9 +2,13 @@ import { defineProxyService } from '@webext-core/proxy-service'
 
 // 1. Define your service
 class HTTPService {
-	async translate(text: string, targetLanguage: string): Promise<string> {
+	async translate(
+		text: string,
+		inputLanguage: string,
+		targetLanguage: string
+	): Promise<string> {
 		try {
-			const url = `https://translate.googleapis.com/translate_a/t?client=gtx&sl=en&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(
+			const url = `https://translate.googleapis.com/translate_a/t?client=gtx&sl=${inputLanguage}&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(
 				text
 			)}&format=html`
 			const response = await fetch(url, {

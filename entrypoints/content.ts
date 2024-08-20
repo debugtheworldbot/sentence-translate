@@ -132,15 +132,15 @@ const mapElements = () => {
 	})
 }
 
-const translateText = async (
-	text: string,
-	targetLanguage: string
-): Promise<string> => {
+const translateText = async (text: string): Promise<string> => {
 	const http = getHTTPService()
-	return http.translate(text, targetLanguage)
+	const inLanguage = (await storage.getItem<string>('local:inLanguage')) || 'en'
+	const outLanguage =
+		(await storage.getItem<string>('local:outLanguage')) || 'zh'
+	return http.translate(text, inLanguage, outLanguage)
 }
 
-function init(): void {
+async function init(): Promise<void> {
 	mapElements()
 	// Add a style element to the document head for the hover effect
 	const style = document.createElement('style')
@@ -204,7 +204,7 @@ function init(): void {
 
 				// Get the original text
 				const originalText = this.innerHTML
-				translateText(originalText, 'zh')
+				translateText(originalText)
 					.then((data) => {
 						// Show the translated text in the popover
 						popover.innerHTML = data
