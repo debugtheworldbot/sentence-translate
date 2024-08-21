@@ -1,6 +1,6 @@
 import wxtLogo from '/wxt.svg'
 import './App.css'
-import { LANGUAGES } from '../utils'
+import { LANGUAGES } from '../utils/const'
 
 function App() {
 	const [enabled, setEnabled] = useState(false)

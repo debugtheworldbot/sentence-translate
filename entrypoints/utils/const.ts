@@ -1,3 +1,4 @@
+export const popoverClass = 'extension_translate_popover'
 export const LANGUAGES = {
 	en: 'English',
 	ja: 'Japanese',
