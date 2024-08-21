@@ -26,16 +26,17 @@
 
 .switch {
 	font-size: 1rem;
+	margin-bottom: 10px;
 }
 
 .switch-button {
 	border: none;
 	outline: none;
 	border-radius: 0.5rem;
-	padding: 0.5rem 1rem;
+	padding: 0.2rem 0.5rem;
 	background-color: #54bc4a;
 	width: 4rem;
-	margin-left: 10px;
+	margin-right: 10px;
 	color: white;
 }
 
@@ -60,4 +61,9 @@
 	text-align: center;
 	font-weight: bold;
 	width: 100px;
+}
+
+.switch-list {
+	padding: 0;
+	text-align: left;
 }

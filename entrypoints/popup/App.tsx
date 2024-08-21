@@ -4,6 +4,7 @@ import { LANGUAGES } from '../utils'
 
 function App() {
 	const [enabled, setEnabled] = useState(false)
+	const [showTranslateText, setShowTranslateText] = useState(false)
 	const [inLanguage, setInLanguage] = useState('en')
 	const [outLanguage, setOutLanguage] = useState('zh')
 
@@ -16,6 +17,9 @@ function App() {
 		})
 		storage.getItem<string>('local:outLanguage').then((data) => {
 			setOutLanguage(data === null ? 'zh' : data)
+		})
+		storage.getItem<boolean>('local:showTranslateText').then((data) => {
+			setShowTranslateText(data === null ? false : data)
 		})
 	}, [])
 
@@ -66,16 +70,31 @@ function App() {
 				</div>
 			</div>
 			<div className='card'>Press Alt/Option + z to toggle it!</div>
-			<div className='switch'>
-				auto enable sentence translate on every page
-				<button
-					className='switch-button'
-					style={{ background: enabled ? '#4CAF50' : '#FF0000' }}
-					onClick={clickToggle}
-				>
-					{enabled ? 'ON' : 'OFF'}
-				</button>
-			</div>
+			<ul className='switch-list'>
+				<li className='switch'>
+					<button
+						className='switch-button'
+						style={{ background: enabled ? '#4CAF50' : '#FF0000' }}
+						onClick={clickToggle}
+					>
+						{enabled ? 'ON' : 'OFF'}
+					</button>
+					auto enable sentence translate on every page
+				</li>
+				<li className='switch'>
+					<button
+						className='switch-button'
+						style={{ background: showTranslateText ? '#4CAF50' : '#FF0000' }}
+						onClick={() => {
+							setShowTranslateText(!showTranslateText)
+							storage.setItem('local:showTranslateText', !showTranslateText)
+						}}
+					>
+						{showTranslateText ? 'ON' : 'OFF'}
+					</button>
+					show translated text and show original text in popover
+				</li>
+			</ul>
 		</>
 	)
 }

@@ -2,6 +2,7 @@ import { getHTTPService } from './httpService'
 
 const status = {
 	enabled: false,
+	showTranslateText: false,
 }
 
 const popoverClass = 'extension_translate_popover'
@@ -12,13 +13,16 @@ export default defineContentScript({
 	main() {
 		storage.getItem<boolean>('local:autoEnabled').then((data) => {
 			status.enabled = data === null ? true : data
-			if (status.enabled) {
-				setTimeout(() => {
-					console.log('init')
-					init()
-					listenForRouteChange()
-				}, 1500)
-			}
+			storage.getItem<boolean>('local:showTranslateText').then((data) => {
+				status.showTranslateText = data === null ? false : data
+				if (status.enabled) {
+					setTimeout(() => {
+						console.log('init')
+						init()
+						listenForRouteChange()
+					}, 1500)
+				}
+			})
 		})
 		document.addEventListener('keydown', (event) => {
 			// Detect keybinding for Option+S (Alt+S)
@@ -112,6 +116,7 @@ const mapElements = () => {
 		'CODE',
 		'IMG',
 		'BLOCKQUOTE',
+		'FIGURE',
 	]
 	const list = (
 		[
@@ -164,6 +169,7 @@ async function init(): Promise<void> {
         transform: translateY(10px);
         opacity: 0;
         transition: all 0.2s !important;
+				pointer-events: none;
     }
 `
 	style.id = 'SENTENCE_STYLE_SHEET'
@@ -188,6 +194,19 @@ async function init(): Promise<void> {
 			function listener() {
 				updatePopoverPosition(span, popover)
 			}
+			if (status.showTranslateText) {
+				const originalText = span.innerHTML
+				translatedMap[span.id] = originalText
+				translateText(originalText)
+					.then((data) => {
+						// Show the translated text in the popover
+						span.innerHTML = data
+					})
+					.catch((error) => {
+						popover.innerText = 'Translation failed'
+						console.error('Error:', error)
+					})
+			}
 			span.addEventListener('mouseover', function (this: HTMLElement) {
 				this.style.borderBottomColor = greenColor
 
@@ -196,6 +215,10 @@ async function init(): Promise<void> {
 				// update position when window is resized or scrolled
 				window.addEventListener('resize', listener)
 				window.addEventListener('scroll', listener)
+				if (status.showTranslateText) {
+					popover.innerHTML = translatedMap[span.id]
+					return
+				}
 				// Check if the popover already contains translated text
 				if (translatedMap[span.id]) {
 					popover.innerHTML = translatedMap[span.id]
